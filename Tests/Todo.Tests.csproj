@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" PrivateAssets="all" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
+    <PackageReference Include="Microsoft.Maui.Controls.Core" Version="10.0.110" />
+  </ItemGroup>
+
+  <!-- Проверяем те же файлы сервиса и модели, без запуска MAUI. -->
+  <ItemGroup>
+    <Compile Include="../Models/TodoItem.cs" Link="Models/TodoItem.cs" />
+    <Compile Include="../Services/TodoDatabase.cs" Link="Services/TodoDatabase.cs" />
+    <Compile Include="../ViewModels/TodoViewModel.cs" Link="ViewModels/TodoViewModel.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,15 @@
+# Build outputs
+bin/
+obj/
+publish/
+TestResults/
+*.db3
+*.db3-journal
+
+# User-specific files
+.vs/
+*.user
+*.suo
+
+# OS-generated files
+.DS_Store

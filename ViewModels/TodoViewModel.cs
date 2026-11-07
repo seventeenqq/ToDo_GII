@@ -1,0 +1,173 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows.Input;
+using Microsoft.Maui.Controls;
+using Todo.Models;
+using Todo.Services;
+
+namespace Todo.ViewModels
+{
+    public class TodoViewModel : INotifyPropertyChanged
+    {
+        private TodoDatabase database;
+        private Command addTaskCommand;
+        private string newTitle = "";
+        private string selectedCategory = "Без категории";
+        private TodoItem? selectedParent;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public ObservableCollection<TodoItem> Tasks { get; private set; }
+        public ObservableCollection<TodoItem> ParentOptions { get; private set; }
+        public List<string> Categories { get; private set; }
+
+        // Используем готовый Command из MAUI, свой класс команд не пишем.
+        public ICommand AddTaskCommand
+        {
+            get { return addTaskCommand; }
+        }
+
+        public ICommand DeleteTaskCommand { get; private set; }
+        public ICommand ToggleTaskCommand { get; private set; }
+
+        // Это свойство связано с Text поля ввода через TwoWay-привязку.
+        public string NewTitle
+        {
+            get { return newTitle; }
+            set
+            {
+                newTitle = value;
+                OnPropertyChanged(nameof(NewTitle));
+                // Кнопка повторно вызовет CanAddTask и обновит доступность.
+                addTaskCommand.ChangeCanExecute();
+            }
+        }
+
+        public string SelectedCategory
+        {
+            get { return selectedCategory; }
+            set
+            {
+                selectedCategory = value;
+                OnPropertyChanged(nameof(SelectedCategory));
+            }
+        }
+
+        public TodoItem? SelectedParent
+        {
+            get { return selectedParent; }
+            set
+            {
+                selectedParent = value;
+                OnPropertyChanged(nameof(SelectedParent));
+            }
+        }
+
+        public TodoViewModel(TodoDatabase database)
+        {
+            this.database = database;
+            Tasks = new ObservableCollection<TodoItem>();
+            ParentOptions = new ObservableCollection<TodoItem>();
+
+            Categories = new List<string>();
+            Categories.Add("Без категории");
+            Categories.Add("Покупки");
+            Categories.Add("Учёба");
+            Categories.Add("Дом");
+            Categories.Add("Работа");
+
+            addTaskCommand = new Command(AddTask, CanAddTask);
+            DeleteTaskCommand = new Command<TodoItem>(DeleteTask);
+            ToggleTaskCommand = new Command<TodoItem>(ToggleTask);
+            LoadTasks();
+        }
+
+        private bool CanAddTask()
+        {
+            return !string.IsNullOrWhiteSpace(NewTitle);
+        }
+
+        private void AddTask()
+        {
+            if (!CanAddTask())
+            {
+                return;
+            }
+
+            int parentId = 0;
+            if (SelectedParent != null)
+            {
+                parentId = SelectedParent.Id;
+            }
+
+            database.AddTask(NewTitle, SelectedCategory, parentId);
+            NewTitle = "";
+            LoadTasks();
+        }
+
+        private void DeleteTask(TodoItem item)
+        {
+            database.DeleteTask(item.Id);
+            LoadTasks();
+        }
+
+        private void ToggleTask(TodoItem item)
+        {
+            database.SetCompleted(item.Id, !item.IsCompleted);
+            LoadTasks();
+        }
+
+        private void LoadTasks()
+        {
+            int selectedParentId = 0;
+            if (SelectedParent != null)
+            {
+                selectedParentId = SelectedParent.Id;
+            }
+
+            List<TodoItem> items = database.GetTasks();
+            Tasks.Clear();
+            ParentOptions.Clear();
+
+            TodoItem noParent = new TodoItem();
+            noParent.Title = "Основная задача";
+            ParentOptions.Add(noParent);
+            TodoItem parentToSelect = noParent;
+            
+            foreach (TodoItem parent in items)
+            {
+                if (parent.ParentId != 0)
+                {
+                    continue;
+                }
+
+                Tasks.Add(parent);
+                ParentOptions.Add(parent);
+                if (parent.Id == selectedParentId)
+                {
+                    parentToSelect = parent;
+                }
+
+                foreach (TodoItem child in items)
+                {
+                    if (child.ParentId == parent.Id)
+                    {
+                        Tasks.Add(child);
+                    }
+                }
+            }
+
+            SelectedParent = parentToSelect;
+        }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
+}

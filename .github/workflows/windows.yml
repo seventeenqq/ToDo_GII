@@ -1,0 +1,55 @@
+name: Test and build Windows
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Test database service
+        run: dotnet test Tests/Todo.Tests.csproj -c Release --logger trx --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-results
+          path: TestResults/*.trx
+          if-no-files-found: warn
+
+      - name: Install MAUI for Windows
+        run: dotnet workload install maui-windows
+
+      - name: Publish Windows app
+        run: >-
+          dotnet publish Todo.csproj
+          -f net10.0-windows10.0.19041.0
+          -p:TargetFrameworks=net10.0-windows10.0.19041.0
+          -c Release
+          -p:RuntimeIdentifierOverride=win-x64
+          -p:WindowsPackageType=None
+          -p:WindowsAppSDKSelfContained=true
+          -p:SelfContained=true
+          -o publish
+
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Todo-Windows-x64
+          path: publish/
+          if-no-files-found: error
