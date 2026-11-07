@@ -18,12 +18,9 @@ namespace Todo.ViewModels
         private TodoItem? selectedParent;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-
         public ObservableCollection<TodoItem> Tasks { get; private set; }
         public ObservableCollection<TodoItem> ParentOptions { get; private set; }
         public List<string> Categories { get; private set; }
-
-        // Используем готовый Command из MAUI, свой класс команд не пишем.
         public ICommand AddTaskCommand
         {
             get { return addTaskCommand; }
@@ -40,7 +37,6 @@ namespace Todo.ViewModels
             {
                 newTitle = value;
                 OnPropertyChanged(nameof(NewTitle));
-                // Кнопка повторно вызовет CanAddTask и обновит доступность.
                 addTaskCommand.ChangeCanExecute();
             }
         }
@@ -96,13 +92,17 @@ namespace Todo.ViewModels
                 return;
             }
 
-            int parentId = 0;
-            if (SelectedParent != null)
+            int? parentId = null;
+            if (SelectedParent != null && SelectedParent.Id != 0)
             {
                 parentId = SelectedParent.Id;
             }
 
-            database.AddTask(NewTitle, SelectedCategory, parentId);
+            database.AddTask(
+                NewTitle,
+                SelectedCategory,
+                parentId);
+
             NewTitle = "";
             LoadTasks();
         }
@@ -121,30 +121,29 @@ namespace Todo.ViewModels
 
         private void LoadTasks()
         {
-            int selectedParentId = 0;
-            if (SelectedParent != null)
-            {
-                selectedParentId = SelectedParent.Id;
-            }
+            int? selectedParentId = SelectedParent?.Id;
 
             List<TodoItem> items = database.GetTasks();
+
             Tasks.Clear();
             ParentOptions.Clear();
 
+            // Этот пункт существует только в списке выбора, в базу передаём null.
             TodoItem noParent = new TodoItem();
-            noParent.Title = "Основная задача";
+            noParent.Title = "Основная задача (без родителя)";
             ParentOptions.Add(noParent);
             TodoItem parentToSelect = noParent;
-            
+
             foreach (TodoItem parent in items)
             {
-                if (parent.ParentId != 0)
+                if (parent.ParentId != null)
                 {
                     continue;
                 }
 
                 Tasks.Add(parent);
                 ParentOptions.Add(parent);
+
                 if (parent.Id == selectedParentId)
                 {
                     parentToSelect = parent;

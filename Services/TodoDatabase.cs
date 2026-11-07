@@ -5,7 +5,6 @@ using Todo.Models;
 
 namespace Todo.Services
 {
-    // Сервис ничего не знает о странице и кнопках. Поэтому его можно тестировать отдельно.
     public class TodoDatabase : IDisposable
     {
         private SQLiteConnection connection;
@@ -21,29 +20,36 @@ namespace Todo.Services
             return connection.Table<TodoItem>().ToList();
         }
 
-        public TodoItem AddTask(string title, string category, int parentId)
+    public TodoItem AddTask(string title, string category, int? parentId = null)
+    {
+        if (string.IsNullOrWhiteSpace(title))
         {
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                throw new ArgumentException("Заголовок не должен быть пустым.");
-            }
-
-            if (parentId != 0)
-            {
-                TodoItem? parent = connection.Find<TodoItem>(parentId);
-                if (parent == null || parent.ParentId != 0)
-                {
-                    throw new ArgumentException("Подзадачу можно добавить только к основной задаче.");
-                }
-            }
-
-            TodoItem item = new TodoItem();
-            item.Title = title.Trim();
-            item.Category = category;
-            item.ParentId = parentId;
-            connection.Insert(item);
-            return item;
+            throw new ArgumentException(
+                "Заголовок не должен быть пустым.");
         }
+
+        if (parentId.HasValue)
+        {
+            TodoItem? parent =
+                connection.Find<TodoItem>(parentId.Value);
+
+            if (parent == null || parent.ParentId != null)
+        {
+            throw new ArgumentException(
+                "Подзадачу можно добавить только к основной задаче.");
+        }
+        }
+
+        TodoItem item = new TodoItem();
+
+        item.Title = title.Trim();
+        item.Category = category;
+        item.ParentId = parentId;
+
+        connection.Insert(item);
+
+        return item;
+    }
 
         public void SetCompleted(int id, bool isCompleted)
         {

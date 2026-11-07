@@ -54,7 +54,9 @@
                             ItemsSource="{Binding ParentOptions}"
                             ItemDisplayBinding="{Binding Title, x:DataType=models:TodoItem}"
                             SelectedItem="{Binding SelectedParent, Mode=TwoWay}"
-                            TextColor="Black" TitleColor="Gray" BackgroundColor="White" />
+                            TextColor="Black"
+                            TitleColor="Gray"
+                            BackgroundColor="White" />
                 </VerticalStackLayout>
             </Grid>
         </Border>
@@ -69,12 +71,12 @@
             </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:TodoItem">
-                    <!-- У подзадач отступ слева. У основных задач ParentId равен 0. -->
+                    <!-- У подзадач отступ слева. У основных задач ParentId равен null. -->
                     <Border Padding="10" Margin="24,0,0,8"
                             BackgroundColor="White" Stroke="#D2DAE6"
                             StrokeShape="RoundRectangle 10">
                         <Border.Triggers>
-                            <DataTrigger TargetType="Border" Binding="{Binding ParentId}" Value="0">
+                            <DataTrigger TargetType="Border" Binding="{Binding ParentId}" Value="{x:Null}">
                                 <Setter Property="Margin" Value="0,0,0,8" />
                             </DataTrigger>
                             <DataTrigger TargetType="Border" Binding="{Binding IsCompleted}" Value="True">

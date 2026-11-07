@@ -11,7 +11,7 @@ namespace Todo
         public MainPage()
         {
             InitializeComponent();
-            string path = Path.Combine(FileSystem.AppDataDirectory, "tasks.db3");
+            string path = Path.Combine(FileSystem.AppDataDirectory, "tasks_nullable.db3");
             TodoDatabase database = new TodoDatabase(path);
             BindingContext = new TodoViewModel(database);
         }
