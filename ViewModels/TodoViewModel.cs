@@ -12,7 +12,7 @@ namespace Todo.ViewModels
     public class TodoViewModel : INotifyPropertyChanged
     {
         private TodoDatabase database;
-        private Command addTaskCommand;
+        private Command<string> addTaskCommand;
         private string newTitle = "";
         private string selectedCategory = "Без категории";
         private TodoItem? selectedParent;
@@ -28,8 +28,6 @@ namespace Todo.ViewModels
 
         public ICommand DeleteTaskCommand { get; private set; }
         public ICommand ToggleTaskCommand { get; private set; }
-
-        // Это свойство связано с Text поля ввода через TwoWay-привязку.
         public string NewTitle
         {
             get { return newTitle; }
@@ -37,7 +35,6 @@ namespace Todo.ViewModels
             {
                 newTitle = value;
                 OnPropertyChanged(nameof(NewTitle));
-                addTaskCommand.ChangeCanExecute();
             }
         }
 
@@ -74,20 +71,20 @@ namespace Todo.ViewModels
             Categories.Add("Дом");
             Categories.Add("Работа");
 
-            addTaskCommand = new Command(AddTask, CanAddTask);
+            addTaskCommand = new Command<string>(AddTask, CanAddTask);
             DeleteTaskCommand = new Command<TodoItem>(DeleteTask);
             ToggleTaskCommand = new Command<TodoItem>(ToggleTask);
             LoadTasks();
         }
 
-        private bool CanAddTask()
+        private bool CanAddTask(string? title)
         {
-            return !string.IsNullOrWhiteSpace(NewTitle);
+            return !string.IsNullOrWhiteSpace(title);
         }
 
-        private void AddTask()
+        private void AddTask(string? title)
         {
-            if (!CanAddTask())
+            if (string.IsNullOrWhiteSpace(title))
             {
                 return;
             }
@@ -99,7 +96,7 @@ namespace Todo.ViewModels
             }
 
             database.AddTask(
-                NewTitle,
+                title,
                 SelectedCategory,
                 parentId);
 
@@ -128,7 +125,6 @@ namespace Todo.ViewModels
             Tasks.Clear();
             ParentOptions.Clear();
 
-            // Этот пункт существует только в списке выбора, в базу передаём null.
             TodoItem noParent = new TodoItem();
             noParent.Title = "Основная задача (без родителя)";
             ParentOptions.Add(noParent);

@@ -37,7 +37,8 @@
                            TextColor="Black" PlaceholderColor="Gray"
                            BackgroundColor="White" />
                     <Button Grid.Column="1" Text="Добавить"
-                            Command="{Binding AddTaskCommand}" />
+                            Command="{Binding AddTaskCommand}"
+                            CommandParameter="{Binding NewTitle}" />
                 </Grid>
 
                 <Grid Grid.Row="2" ColumnDefinitions="Auto,*" ColumnSpacing="12">
